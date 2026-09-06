@@ -3,10 +3,10 @@ import logoImage from './assets/logo.png'
 
 // Enlaces de las redes sociales de BelliDiel Coffee
 const socialLinks = [
-  { name: 'TikTok', url: 'https://www.tiktok.com', icon: '🎵', class: 'tiktok' },
-  { name: 'Facebook', url: 'https://www.facebook.com', icon: '👥', class: 'facebook' },
-  { name: 'Instagram', url: 'https://www.instagram.com', icon: '📸', class: 'instagram' },
-  { name: 'WhatsApp', url: 'https://wa.me/tu_numero', icon: '💬', class: 'whatsapp' }
+  { name: 'TikTok', url: 'https://www.tiktok.com/@bellidiel.coffee?_r=1&_t=ZS-99UfWAwe8Di', icon: '🎵', class: 'tiktok' },
+  { name: 'Facebook', url: 'https://www.facebook.com/share/1F1upTENQD/', icon: '👥', class: 'facebook' },
+  { name: 'Instagram', url: 'https://www.instagram.com/bellidiel_coffe?stkn=MWN0dGl5aTk5ODFlbw==', icon: '📸', class: 'instagram' },
+  { name: 'WhatsApp', url: 'https://wa.me/528333073501', icon: '💬', class: 'whatsapp' }
 ]
 </script>
 
