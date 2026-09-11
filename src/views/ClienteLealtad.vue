@@ -7,7 +7,7 @@
 
     <header class="header">
       <img :src="logoImage" alt="BelliDiel Coffee Logo" class="brand-logo" />
-      <h1 class="brand-title">Programa de Lealtad</h1>
+      <h1 class="brand-title">MIS CAFES☕</h1>
       <p class="brand-subtitle">Ingresa tu número para ver tus recompensas</p>
       <p class="brand-subtitle2">VALIDO HASTA EL 30 DE OCTUBRE DEL 2026</p>
     </header>
@@ -47,19 +47,35 @@
           </div>
         </div>
 
+        <!-- PREMIO DE 5 CAFÉS -->
         <transition name="bounce">
           <div v-if="cafesComprados >= 5 && cafesComprados < 10" class="reward-banner reward-5">
-            <h3>¡Felicidades!</h3>
-            <p>Tienes tu bebida completamente <strong>GRATIS</strong></p>
-            <img :src="premio5" alt="Bebida Roja Gratis" class="reward-img" />
+            <template v-if="!premio5Reclamado">
+              <h3>¡Felicidades!</h3>
+              <p>Tienes tu bebida completamente <strong>GRATIS</strong></p>
+              <img :src="premio5" alt="Bebida Gratis" class="reward-img" />
+              <p class="claim-notice">🎁 Muestra esta pantalla en caja para reclamarlo</p>
+            </template>
+            <template v-else>
+              <h3>¡Premio Reclamado! 🎉</h3>
+              <p>Ya disfrutaste tu bebida de 5 cafés. ¡Sigue acumulando para tu premio de los 10 cafés!</p>
+            </template>
           </div>
         </transition>
 
+        <!-- PREMIO DE 10 CAFÉS -->
         <transition name="bounce">
           <div v-if="cafesComprados >= 10" class="reward-banner reward-10">
-            <h3>¡Felicidades!</h3>
-            <p>Tienes un café completamente <strong>GRATIS</strong></p>
-            <img :src="premio10" alt="Cafés Fríos Gratis" class="reward-img-large" />
+            <template v-if="!premio10Reclamado">
+              <h3>¡Felicidades!</h3>
+              <p>Tienes un café completamente <strong>GRATIS</strong></p>
+              <img :src="premio10" alt="Cafés Fríos Gratis" class="reward-img-large" />
+              <p class="claim-notice">🎁 Muestra esta pantalla en caja para reclamarlo</p>
+            </template>
+            <template v-else>
+              <h3>¡Premio Mayor Reclamado! ⭐</h3>
+              <p>¡Muchas gracias por tu lealtad! Sigue acumulando más cafés para iniciar un nuevo ciclo de sorpresas.</p>
+            </template>
           </div>
         </transition>
 
@@ -82,6 +98,8 @@ import premio10 from '../assets/cafesfrios.png'
 // Estado
 const telefono = ref('')
 const cafesComprados = ref(null)
+const premio5Reclamado = ref(false)
+const premio10Reclamado = ref(false)
 const toastMessage = ref('')
 const cargando = ref(false)
 
@@ -107,7 +125,10 @@ const buscarUsuario = async () => {
     const clienteSnap = await getDoc(clienteRef)
 
     if (clienteSnap.exists()) {
-      cafesComprados.value = clienteSnap.data().cafes_comprados
+      const data = clienteSnap.data()
+      cafesComprados.value = data.cafes_comprados || 0
+      premio5Reclamado.value = data.premio5_reclamado || false
+      premio10Reclamado.value = data.premio10_reclamado || false
     } else {
       mostrarToast('Número no encontrado. ¡Regístrate en caja en tu próxima visita!')
       cafesComprados.value = null
@@ -123,7 +144,6 @@ const buscarUsuario = async () => {
 </script>
 
 <style scoped>
-
 .loyalty-container {
   max-width: 480px;
   margin: 0 auto;
@@ -193,6 +213,7 @@ const buscarUsuario = async () => {
   color: #665243;
   margin: 0;
 }
+
 .brand-subtitle2 {
   font-size: 18px;
   color: #665243;
@@ -334,7 +355,7 @@ const buscarUsuario = async () => {
 
 .reward-banner p {
   font-size: 15px;
-  margin: 0 0 20px 0;
+  margin: 0 0 15px 0;
 }
 
 .reward-5 {
@@ -349,6 +370,7 @@ const buscarUsuario = async () => {
   width: 160px;
   height: auto;
   filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  margin-bottom: 10px;
 }
 
 .reward-img-large {
@@ -356,6 +378,16 @@ const buscarUsuario = async () => {
   max-width: 280px;
   height: auto;
   filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  margin-bottom: 10px;
+}
+
+.claim-notice {
+  font-size: 13px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-top: 10px !important;
 }
 
 .fade-enter-active, .fade-leave-active {

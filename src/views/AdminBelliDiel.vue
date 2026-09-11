@@ -36,6 +36,8 @@ const verificarPassword = async () => {
 const telefonoCliente = ref('')
 const clienteEncontrado = ref(null)
 const cafesActuales = ref(0)
+const premio5Reclamado = ref(false)
+const premio10Reclamado = ref(false)
 const cantidadACambiar = ref(null)
 const mensajeExito = ref('')
 const errorBusqueda = ref('')
@@ -57,10 +59,15 @@ const buscarCliente = async () => {
     const clienteSnap = await getDoc(clienteRef)
 
     if (clienteSnap.exists()) {
-      cafesActuales.value = clienteSnap.data().cafes_comprados
+      const data = clienteSnap.data()
+      cafesActuales.value = data.cafes_comprados || 0
+      premio5Reclamado.value = data.premio5_reclamado || false
+      premio10Reclamado.value = data.premio10_reclamado || false
       clienteEncontrado.value = true
     } else {
       cafesActuales.value = 0
+      premio5Reclamado.value = false
+      premio10Reclamado.value = false
       clienteEncontrado.value = false
     }
   } catch (err) {
@@ -93,7 +100,11 @@ const actualizarCafes = async () => {
     if (clienteSnap.exists()) {
       await updateDoc(clienteRef, { cafes_comprados: nuevoTotal })
     } else {
-      await setDoc(clienteRef, { cafes_comprados: nuevoTotal })
+      await setDoc(clienteRef, { 
+        cafes_comprados: nuevoTotal,
+        premio5_reclamado: false,
+        premio10_reclamado: false
+      })
     }
 
     cafesActuales.value = nuevoTotal
@@ -103,6 +114,32 @@ const actualizarCafes = async () => {
   } catch (err) {
     console.error("Error al actualizar sellos:", err)
     errorBusqueda.value = 'No se pudo guardar el cambio.'
+  } finally {
+    cargando.value = false
+  }
+}
+
+// Función para alternar o cambiar el estado de los premios
+const togglePremio = async (tipoPremio) => {
+  cargando.value = true
+  errorBusqueda.value = ''
+  mensajeExito.value = ''
+
+  try {
+    const clienteRef = doc(db, 'clientes', telefonoCliente.value)
+    
+    if (tipoPremio === 5) {
+      premio5Reclamado.value = !premio5Reclamado.value
+      await updateDoc(clienteRef, { premio5_reclamado: premio5Reclamado.value })
+      mensajeExito.value = premio5Reclamado.value ? '🎁 Premio de 5 cafés marcado como ENTREGADO.' : '🔄 Premio de 5 cafés marcado como PENDIENTE.'
+    } else if (tipoPremio === 10) {
+      premio10Reclamado.value = !premio10Reclamado.value
+      await updateDoc(clienteRef, { premio10_reclamado: premio10Reclamado.value })
+      mensajeExito.value = premio10Reclamado.value ? '🎁 Premio de 10 cafés marcado como ENTREGADO.' : '🔄 Premio de 10 cafés marcado como PENDIENTE.'
+    }
+  } catch (err) {
+    console.error("Error al actualizar estado del premio:", err)
+    errorBusqueda.value = 'No se pudo actualizar el estado del premio.'
   } finally {
     cargando.value = false
   }
@@ -173,7 +210,7 @@ const actualizarCafes = async () => {
         <span class="badge-icon">☕</span> Panel de Control
       </div>
       <h2>Gestión de Compras</h2>
-      <p class="panel-subtitle">Agrega puntos al programa de clientes</p>
+      <p class="panel-subtitle">Agrega puntos y controla recompensas</p>
 
       <div class="input-group">
         <label for="phone-search">WhatsApp del Cliente (10 dígitos)</label>
@@ -203,6 +240,29 @@ const actualizarCafes = async () => {
             <span class="cafes-label">Cafés acumulados</span>
             <span class="cafes-number">{{ cafesActuales }} ☕</span>
           </div>
+
+          <!-- SECCIÓN DE CONTROL DE PREMIOS -->
+          <div class="rewards-control-box">
+            <p class="rewards-title">Estado de Recompensas:</p>
+            <div class="rewards-buttons-row">
+              <button 
+                @click="togglePremio(5)" 
+                :class="['reward-status-btn', premio5Reclamado ? 'claimed' : 'available']"
+                :disabled="cargando"
+              >
+                {{ premio5Reclamado ? '✅ Premio 5 Entregado' : '⏳ Premio 5 Pendiente' }}
+              </button>
+
+              <button 
+                @click="togglePremio(10)" 
+                :class="['reward-status-btn', premio10Reclamado ? 'claimed' : 'available']"
+                :disabled="cargando"
+              >
+                {{ premio10Reclamado ? '✅ Premio 10 Entregado' : '⏳ Premio 10 Pendiente' }}
+              </button>
+            </div>
+          </div>
+
           <p v-if="!clienteEncontrado" class="new-notice">
             💡 Este número es nuevo. Al agregar cafés se registrará automáticamente.
           </p>
@@ -553,6 +613,51 @@ const actualizarCafes = async () => {
   font-size: 1.2rem;
   color: #2e7d32;
   font-weight: 800;
+}
+
+/* ESTILOS PARA LOS BOTONES DE PREMIOS */
+.rewards-control-box {
+  background: #fff;
+  border: 1px solid #e0d0c0;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.rewards-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5d4037;
+  margin: 0 0 6px 0;
+}
+
+.rewards-buttons-row {
+  display: flex;
+  gap: 6px;
+}
+
+.reward-status-btn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.reward-status-btn.available {
+  background-color: #fff3e0;
+  color: #e65100;
+  border-color: #ffe0b2;
+}
+
+.reward-status-btn.claimed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-color: #c8e6c9;
 }
 
 .new-notice {
